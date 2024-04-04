@@ -1,0 +1,22 @@
+#include <iostream>
+#include <ncurses.h>
+
+int main() {
+    initscr();
+
+    int points = 0;
+    char ch;
+
+    while (true) {
+        ch = getch();
+
+        if (ch == 'b') {
+            points++;
+        }
+        clear();
+        printw("Ilosc punktow: %d", points);
+    }
+
+    endwin();
+    return 0;
+}

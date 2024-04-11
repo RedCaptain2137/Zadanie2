@@ -1,22 +1,84 @@
 #include <iostream>
-#include <ncurses.h>
+#include <fstream>
+#include <conio.h>
+#include <string>
 
-int main() {
-    initscr();
-
+class GameModel {
     int points = 0;
-    char ch;
-
-    while (true) {
-        ch = getch();
-
-        if (ch == 'b') {
+    public:
+        void addPoint() {
             points++;
         }
-        clear();
-        printw("Ilosc punktow: %d", points);
+        int getPoints() {
+            return points;
+        }
+
+    void saveState() {
+        std::ofstream file("save.txt", std::ofstream::trunc);// W trybie trunc usuwa zawartosc pliku i pozwala na nadpisywanie
+        file << points;
+        file.close();
     }
 
-    endwin();
+    void loadState() {
+        std::ifstream file("save.txt");
+        // upewniamy sie, czy plik istnieje czy nie
+        if (file.fail() == 1) {
+            std::cout << "Nie znaleziono pliku" << std::endl;
+            points = 0;
+            return;
+        }
+        // jezeli istnieje, to wczytujemy dane
+        std::string str;
+        if (std::getline(file, str)) {
+            points = atoi(str.c_str());// konwersja string na const char*, bo atoi przyjmuje tylko taki argument i zwraca int
+            file.close();
+            std::cout << "Ladowanie zapisu" << points << " points!" << std::endl;
+        }
+
+    }
+};
+class GameView {
+    public:
+        void printStartHeader() {
+            std::cout << "Nacisnij B by zdobyc punkt, nacisnij e by wyjsc" << std::endl;
+        }
+        void printData(int points) {
+            std::cout << "Punkty: " << points << std::endl;
+        }
+        char getUserInput() {
+            return _getch();
+        }
+};
+class GameController {
+    public:
+        GameModel model;
+        GameView view;
+
+        void launch() {
+            model.loadState();
+            view.printStartHeader();
+        }
+
+        GameController(GameModel model, GameView view) {
+            this->model = model;
+            this->view = view;
+        }
+};
+
+int main() {
+    // iniclaizacja
+    GameController game = *new GameController(*new GameModel, *new GameView);
+    game.launch();
+
+    char input;
+    do {
+        input = game.view.getUserInput();
+        if (input == 'b') {
+            game.model.addPoint(); // modyfikacja danych
+            game.model.saveState(); // zapis danych
+            game.view.printData(game.model.getPoints()); // wizualizacja danych
+        }
+    } while(input != 'e');
+
     return 0;
 }
